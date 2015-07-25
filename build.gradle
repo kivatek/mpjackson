@@ -1,0 +1,69 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '1.2.2'
+}
+
+apply plugin: 'java'
+apply plugin: 'application'
+
+defaultTasks 'shadowJar'
+
+project.ext {
+    authorName = 'kivatek'
+    dropwizardVersion = '0.8.2'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+group = 'com.kivatek'
+version = '1.0'
+
+applicationName = 'MpJackson'
+mainClassName = 'com.kivatek.mpjackson.Application'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+def defaultEncoding = 'UTF-8'
+tasks.withType(AbstractCompile)*.options*.encoding = defaultEncoding
+tasks.withType(GroovyCompile)*.groovyOptions*.encoding = defaultEncoding
+
+dependencies {
+    compile 'org.apache.poi:poi:3.12'
+    compile 'org.apache.poi:poi-ooxml:3.12'
+    compile 'org.apache.poi:poi-ooxml-schemas:3.12'
+    compile 'org.komamitsu:jackson-dataformat-msgpack:0.0.3'
+    compile 'org.apache.commons:commons-lang3:3.4'
+    compile 'commons-io:commons-io:2.4'
+    compile 'org.apache.commons:commons-collections4:4.0'
+
+    testCompile "junit:junit:4.11"
+
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.5'
+}
+
+shadowJar {
+    archiveName = String.format("%s-%s.jar", applicationName, version)
+    mergeServiceFiles()
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+}
+
+jar {
+    manifest {
+        attributes(
+                'Implementation-Title': applicationName,
+                'Implementation-Version': version,
+                'Built-By': authorName,
+                'Built-Time': new Date(),
+                'Main-Class': mainClassName,
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' ')
+        )
+    }
+}
