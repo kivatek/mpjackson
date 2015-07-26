@@ -132,14 +132,24 @@ public class Application {
         // ところが長さ0の文字列など見かけの情報がなくてもcellの情報が存在することはあり別途チェックすることになる。
         if (isBlankCell(cell) == false) {
             switch (cell.getCellType()) {
+                case Cell.CELL_TYPE_FORMULA:
+                    // 書式が設定されている場合はCELL_TYPE_NUMERIC、CELL_TYPE_STRING、CELL_TYPE_BOOLEANの違いが分からない
+                    // そのため強制的に値の取得を繰り返す
+                    try {
+                        return cell.getStringCellValue().trim();
+                    } catch (Exception e) {
+                    }
+                    try {
+                        return String.valueOf(Double.valueOf(cell.getNumericCellValue()));
+                    } catch (Exception e) {
+                    }
+                    return String.valueOf(cell.getBooleanCellValue());
                 case Cell.CELL_TYPE_NUMERIC:
-                    long l = (long) cell.getNumericCellValue();
-                    return String.valueOf(l);
+                    return String.valueOf(Double.valueOf(cell.getNumericCellValue()));
                 case Cell.CELL_TYPE_STRING:
                     return cell.getStringCellValue().trim();
                 case Cell.CELL_TYPE_BOOLEAN:
-                    boolean b = cell.getBooleanCellValue();
-                    return String.valueOf(b);
+                    return String.valueOf(cell.getBooleanCellValue());
             }
         }
         return "";
@@ -189,13 +199,20 @@ public class Application {
                     field.set(obj, inputDateFormat.parse(content));
                     break;
                 case "int":
-                    field.setInt(obj, Integer.parseInt(content));
+                    content = (content.length() == 0) ? "0" : content;
+                    field.setInt(obj, (int)Double.parseDouble(content));
                     break;
                 case "long":
-                    field.setLong(obj, Long.parseLong(content));
+                    content = (content.length() == 0) ? "0" : content;
+                    field.setLong(obj, (long)Double.parseDouble(content));
                     break;
                 case "float":
+                    content = (content.length() == 0) ? "0.0f" : content;
                     field.setFloat(obj, Float.parseFloat(content));
+                    break;
+                case "double":
+                    content = (content.length() == 0) ? "0.0" : content;
+                    field.setDouble(obj, Double.parseDouble(content));
                     break;
                 case "boolean":
                     boolean b = false;
