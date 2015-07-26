@@ -86,6 +86,14 @@ public class Application {
             // teamをいったんbyte配列に変換
             // この配列をファイルへ書き出すことでマスターデータファイルとして使用する
             byte[] teamBinary = objectMapper.writeValueAsBytes(team);
+            {
+                StringBuilder sb = new StringBuilder();
+                for (byte b : teamBinary) {
+                    int value = b & 0xff;
+                    sb.append(String.format("0x%2s", Integer.toHexString(value)).replace(' ', '0')).append(",");
+                }
+                System.out.println(sb.toString());
+            }
 
             // byte配列からTeamのインスタンスを復元
             Team decodedTeam = objectMapper.readValue(teamBinary, Team.class);
