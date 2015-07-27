@@ -7,5 +7,5 @@ import java.util.List;
 
 public class Team {
     @JsonProperty
-    List<byte[]> memberData = new ArrayList<>();
+    List<Person> memberData = new ArrayList<>();
 }

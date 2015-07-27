@@ -78,11 +78,13 @@ public class Application {
                         String content = getContentString(cell);
                         String fieldName = fieldMap.get(colIndex).fieldName;
                         setValueToField(person, fieldName, content);
-//                        System.out.println(fieldMap.get(colIndex).fieldName + ":" + fieldMap.get(colIndex).fieldType + ":" + content);
                     }
                 }
-                team.memberData.add(objectMapper.writeValueAsBytes(person));
+                team.memberData.add(person);
             }
+            // 確認のためJSONテキストを標準出力
+            System.out.println(objectMapper.writeValueAsString(team));
+
             // teamをいったんbyte配列に変換
             // この配列をファイルへ書き出すことでマスターデータファイルとして使用する
             byte[] teamBinary = objectMapper.writeValueAsBytes(team);
@@ -97,9 +99,8 @@ public class Application {
 
             // byte配列からTeamのインスタンスを復元
             Team decodedTeam = objectMapper.readValue(teamBinary, Team.class);
-            for (byte[] array : decodedTeam.memberData) {
-                Person decodedPerson = objectMapper.readValue(array, Person.class);
-                System.out.println(decodedPerson.id + ":" + decodedPerson.firstName + ":" + decodedPerson.familyName + ":" + decodedPerson.age);
+            for (Person person : decodedTeam.memberData) {
+                System.out.println(person.id + ":" + person.firstName + ":" + person.familyName + ":" + person.age);
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -131,25 +132,16 @@ public class Application {
         // poiでは内容がないcellの情報は本当にないものとして扱われる。
         // ところが長さ0の文字列など見かけの情報がなくてもcellの情報が存在することはあり別途チェックすることになる。
         if (isBlankCell(cell) == false) {
-            switch (cell.getCellType()) {
-                case Cell.CELL_TYPE_FORMULA:
-                    // 書式が設定されている場合はCELL_TYPE_NUMERIC、CELL_TYPE_STRING、CELL_TYPE_BOOLEANの違いが分からない
-                    // そのため強制的に値の取得を繰り返す
-                    try {
-                        return cell.getStringCellValue().trim();
-                    } catch (Exception e) {
-                    }
-                    try {
-                        return String.valueOf(Double.valueOf(cell.getNumericCellValue()));
-                    } catch (Exception e) {
-                    }
-                    return String.valueOf(cell.getBooleanCellValue());
-                case Cell.CELL_TYPE_NUMERIC:
+            int cellType = cell.getCellType();
+            if ((cellType & Cell.CELL_TYPE_STRING) != 0) {
+                return cell.getStringCellValue().trim();
+            } else if ((cellType & Cell.CELL_TYPE_BOOLEAN) != 0) {
+                return String.valueOf(cell.getBooleanCellValue());
+            } else {
+                try {
                     return String.valueOf(Double.valueOf(cell.getNumericCellValue()));
-                case Cell.CELL_TYPE_STRING:
-                    return cell.getStringCellValue().trim();
-                case Cell.CELL_TYPE_BOOLEAN:
-                    return String.valueOf(cell.getBooleanCellValue());
+                } catch (Exception e) {
+                }
             }
         }
         return "";
